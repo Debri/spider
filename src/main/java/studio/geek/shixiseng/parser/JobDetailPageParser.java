@@ -6,7 +6,7 @@ package studio.geek.shixiseng.parser;
  */
 
 import org.apache.log4j.Logger;
-import studio.geek.core.SimpleLogger;
+import studio.geek.Util.SimpleLogger;
 import studio.geek.shixiseng.entity.Job;
 import studio.geek.shixiseng.entity.Page;
 

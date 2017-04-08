@@ -2,7 +2,6 @@ package studio.geek.Util;
 
 import com.mysql.jdbc.exceptions.MySQLSyntaxErrorException;
 import org.apache.log4j.Logger;
-import studio.geek.core.SimpleLogger;
 
 import java.io.IOException;
 import java.sql.Connection;
@@ -65,7 +64,7 @@ public class DBConnectionManager {
         return conn;
     }
 
-    public void close(Connection conn) {
+    public void closeConnection(Connection conn) {
         if (conn != null) {
             try {
                 conn.close();

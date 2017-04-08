@@ -19,7 +19,7 @@ import java.util.List;
 /**
  * 多线程
  */
-public class JobTask  implements Runnable{
+public class JobTask implements Runnable {
     static List<Job> list = new ArrayList<Job>();
 
     public static void doSpider(String keyWord) {
@@ -44,12 +44,13 @@ public class JobTask  implements Runnable{
             //Job job = new Job();
             //System.out.println(element);
             // System.out.println(element.getElementsByClass("job_head"));
+            Elements elements = element.getElementsByTag("span");
             Elements jobHead = element.getElementsByClass("job_head");
+            System.out.println(elements.get(2));
             for (Element job : jobHead) {
                 Element e = job.getElementsByTag("a").get(0);
                 System.out.println(e);
-                Element element1 = e.getElementsMatchingText("href").get(0);
-                System.out.println("----------"+element1);
+                System.out.println("----" + e.attr("href"));//获得了jon identity
             }
 
           /*  Elements elements = element.getAllElements();

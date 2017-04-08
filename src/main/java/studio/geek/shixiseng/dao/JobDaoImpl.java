@@ -67,7 +67,6 @@ public class JobDaoImpl implements JobDao {
 
     /**
      * 根据公司删除职位信息
-     *
      * @param company
      * @return
      */

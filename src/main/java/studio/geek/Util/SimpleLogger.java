@@ -1,4 +1,4 @@
-package studio.geek.core;
+package studio.geek.Util;
 
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
