@@ -83,25 +83,21 @@ public abstract class AbstractWebPageTask implements Runnable {
             int status = page.getStatusCode();
 
             if (status == HttpStatus.SC_OK) {
-                if (page.getHtml().contains("zhihu")) {
-                    logger.debug("111");
-
+                if (page.getHtml().contains("shixiseng")) {
+                    logger.debug("page right");
+                    handle(page);
                 } else {
-                    /**
-                     * 代理异常，没有正确返回目标url
-                     */
-                    logger.warn("proxy exception:" +);
+                    logger.warn("proxy exception:");
                 }
-
             }
             /**
              * 401--不能通过验证
              */
             else if (status == 404 || status == 401 ||
                     status == 410) {
-                logger.warn(logStr);
+                logger.warn("page not found");
             } else {
-                logger.error(logStr);
+                logger.error("page ok ");
                 Thread.sleep(100);
                 retry();
             }
@@ -113,8 +109,8 @@ public abstract class AbstractWebPageTask implements Runnable {
                 retry();
             }
         } finally {
-            if (request != null) {
-                request.releaseConnection();
+            if (httpRequestBase != null) {
+                httpRequestBase.releaseConnection();
             }
             if (tempRequest != null) {
                 tempRequest.releaseConnection();
@@ -122,6 +118,10 @@ public abstract class AbstractWebPageTask implements Runnable {
 
         }
     }
+
+    abstract void retry();
+
+    abstract void handle(Page page);
 
     /**
      * 统计执行时间

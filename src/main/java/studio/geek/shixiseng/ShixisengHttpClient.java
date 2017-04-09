@@ -1,19 +1,24 @@
 package studio.geek.shixiseng;
 
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpRequestBase;
-import org.apache.http.util.EntityUtils;
-import studio.geek.shixiseng.entity.Page;
-import studio.geek.util.HttpClientUtil;
+import org.apache.log4j.Logger;
+import studio.geek.core.SimpleThreadPoolExecutor;
+import studio.geek.core.ThreadPoolMonitor;
+import studio.geek.shixiseng.task.JobDetailPageTask;
+import studio.geek.util.SimpleLogger;
 
-import java.io.IOException;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.Map;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by Liuqi
  * Date: 2017/4/8.
  */
 public class ShixisengHttpClient {
+    private static Logger logger = SimpleLogger.getSimpleLogger(ShixisengHttpClient.class);
     private volatile static ShixisengHttpClient shixisengHttpClient;
 
     public ShixisengHttpClient getInstance() {
@@ -35,48 +40,110 @@ public class ShixisengHttpClient {
      * 列表页下载多线程
      */
     ThreadPoolExecutor listPageThreadPool;
-
     /**
-     * 下载页面
-     *
-     * @param url
-     * @return page 页面封装
+     * 详情页下载线程池
      */
-    public Page getWebPage(String url) throws IOException {
-        return getWebPage(url, "UTF-8");
+    private ThreadPoolExecutor detailPageThreadPool;
+
+    private void intiThreadPool() {
+        detailPageThreadPool = new SimpleThreadPoolExecutor(10,
+               10,
+                0L, TimeUnit.MILLISECONDS,
+                new LinkedBlockingQueue<Runnable>(),
+                "detailPageThreadPool");
+        listPageThreadPool = new SimpleThreadPoolExecutor(50, 80,
+                0L, TimeUnit.MILLISECONDS,
+                new LinkedBlockingQueue<Runnable>(5000),
+                new ThreadPoolExecutor.DiscardPolicy(), "listPageThreadPool");
+        new Thread(new ThreadPoolMonitor(detailPageThreadPool, "DetailPageDownloadThreadPool")).start();
+        new Thread(new ThreadPoolMonitor(listPageThreadPool, "ListPageDownloadThreadPool")).start();
+
+    }
+    public void startCrawl(String url){
+        detailPageThreadPool.execute(new JobDetailPageTask(url));
+        manageHttpClient();
     }
 
-    public Page getWebPage(String url, String charset) throws IOException {
-        Page page = new Page();
-        CloseableHttpResponse response = null;
-        response = HttpClientUtil.getResponse(url);
-        page.setStatusCode(response.getStatusLine().getStatusCode());
-        page.setUrl(url);
-        try {
-            if (page.getStatusCode() == 200) {
-                page.setHtml(EntityUtils.toString(response.getEntity(), charset));
+
+    /**
+     * 管理知乎客户端
+     * 关闭整个爬虫
+     */
+    public void manageHttpClient(){
+        while (true) {
+            /**
+             * 下载网页数
+             */
+            long downloadPageCount = detailListPageThreadPool.getTaskCount();
+//            if (downloadPageCount >= Config.downloadPageCount &&
+//                    ! ZhiHuHttpClient.getInstance().getDetailPageThreadPool().isShutdown()) {
+//                isStop = true;
+//                /**
+//                 * shutdown 下载网页线程池
+//                 */
+//                ZhiHuHttpClient.getInstance().getDetailPageThreadPool().shutdown();
+//            }
+//            if(ZhiHuHttpClient.getInstance().getDetailPageThreadPool().isTerminated() &&
+//                    !ZhiHuHttpClient.getInstance().getListPageThreadPool().isShutdown()){
+//                /**
+//                 * 下载网页线程池关闭后，再关闭解析网页线程池
+//                 */
+//                ZhiHuHttpClient.getInstance().getListPageThreadPool().shutdown();
+//            }
+//            if(ZhiHuHttpClient.getInstance().getListPageThreadPool().isTerminated()){
+//                /**
+//                 * 关闭线程池Monitor
+//                 */
+//                ThreadPoolMonitor.isStopMonitor = true;
+//                /**
+//                 * 关闭ProxyHttpClient客户端
+//                 */
+//                ProxyHttpClient.getInstance().getProxyTestThreadExecutor().shutdownNow();
+//                ProxyHttpClient.getInstance().getProxyDownloadThreadExecutor().shutdownNow();
+//                logger.info("--------------爬取结果--------------");
+//                logger.info("获取用户数:" + parseUserCount.get());
+//                break;
+//            }
+            if (downloadPageCount >= Config.downloadPageCount &&
+                    !detailListPageThreadPool.isShutdown()) {
+                isStop = true;
+                detailListPageThreadPool.shutdown();
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
+            if(detailListPageThreadPool.isShutdown()){
+                //关闭数据库连接
+                Map<Thread, Connection> map = DetailListPageTask.getConnectionMap();
+                for(Connection cn : map.values()){
+                    try {
+                        if (cn != null && !cn.isClosed()){
+                            cn.close();
+                        }
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+                }
+                break;
+            }
+            double costTime = (System.currentTimeMillis() - startTime) / 1000.0;//单位s
+            logger.debug("抓取速率：" + parseUserCount.get() / costTime + "个/s");
+//            logger.info("downloadFailureProxyPageSet size:" + ProxyHttpClient.downloadFailureProxyPageSet.size());
             try {
-                response.close();
-            } catch (IOException e) {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
                 e.printStackTrace();
             }
         }
-        return page;
+//        System.exit(0);
     }
 
-    public Page getWebPage(HttpRequestBase request) throws IOException {
-        CloseableHttpResponse response = null;
-        response = HttpClientUtil.getResponse(request);
-        Page page = new Page();
-        page.setStatusCode(response.getStatusLine().getStatusCode());
-        page.setHtml(EntityUtils.toString(response.getEntity()));
-        page.setUrl(request.getURI().toString());
-        return page;
+    public ThreadPoolExecutor getDetailPageThreadPool() {
+        return detailPageThreadPool;
     }
+
+    public ThreadPoolExecutor getListPageThreadPool() {
+        return listPageThreadPool;
+    }
+
+
 
     /*public void doTask() throws IOException {
         String path = "http://www.shixiseng.com/interns?k=java&p=1";
