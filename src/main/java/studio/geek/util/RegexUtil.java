@@ -1,4 +1,4 @@
-package studio.geek.Util;
+package studio.geek.util;
 
 import studio.geek.shixiseng.entity.Academic;
 
@@ -35,10 +35,8 @@ public class RegexUtil {
             return Academic.bachelor;
         } else if (res.equals("硕士")) {
             return Academic.master;
-
         } else if (res.equals("博士")) {
             return Academic.doctor;
-
         } else if (res.equals("不限")) {
             return Academic.any;
         } else if (res.equals("大专")) {
@@ -47,10 +45,11 @@ public class RegexUtil {
         return Academic.any;
     }
 
-    public static int  getMonths(String str) throws Exception {
+    public static int getMonths(String str) throws Exception {
         String regex = "(实习)[\\d](个月)";
         String result = getStringByRegex(str, regex);
         int length = result.length();
-        return Integer.parseInt(result.substring(2, length - 3));
+        String s = result.substring(2, length - 2);
+        return Integer.parseInt(result.substring(2, length - 2));
     }
 }

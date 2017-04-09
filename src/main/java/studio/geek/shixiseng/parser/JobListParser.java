@@ -7,16 +7,19 @@ package studio.geek.shixiseng.parser;
 
 import org.apache.log4j.Logger;
 import org.jsoup.Jsoup;
+import org.jsoup.helper.HttpConnection;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import studio.geek.Util.RegexUtil;
-import studio.geek.Util.SimpleLogger;
+import studio.geek.util.RegexUtil;
+import studio.geek.util.SimpleLogger;
 import studio.geek.shixiseng.entity.Company;
 import studio.geek.shixiseng.entity.Job;
 import studio.geek.shixiseng.entity.Page;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -26,9 +29,9 @@ public class JobListParser {
     Logger logger = SimpleLogger.getSimpleLogger(JobListParser.class);
     private static volatile JobListParser jobListParser;
 
-    public static JobListParser getInatance() {
+    public static JobListParser getInstance() {
         if (jobListParser == null) {
-            synchronized (jobListParser) {
+            synchronized (JobListParser.class) {
                 if (jobListParser == null) {
                     jobListParser = new JobListParser();
                 }
@@ -41,12 +44,12 @@ public class JobListParser {
     }
 
     /**
-     * 解析列表页成一个job 的list
+     * 解析列表页成一个job的list,但是能够提取的数据有限
      *
      * @param page
      * @return
      */
-    public static List<Job> parserJobList(Page page) throws Exception {
+    public List<Job> parserJobList(Page page) throws Exception {
         List<Job> jobList = new ArrayList<Job>();
         if (page.getStatusCode() != 200) {
             System.out.println("-----访问页面出错" + page.getStatusCode());
@@ -61,23 +64,53 @@ public class JobListParser {
     }
 
     /**
+     * 通过列表页，进入到每一项工作职位的详情页，解析
+     *
+     * @param page 列表页
+     * @return
+     */
+    public List<Job> parserJobListForDetail(Page page) {
+        String baseUrl = "http://www.shixiseng.com";
+        List<Job> jobList = new LinkedList<Job>();
+        JobDetailPageParser jobDetailPageParser = JobDetailPageParser.getInstance();
+        System.out.println(page.getUrl());
+
+        Document doc = Jsoup.parse(page.getHtml());
+        System.out.println("base url---" + doc.baseUri());
+        Elements jobInfElements = doc.getElementsByClass("job_inf_inf");
+        for (Element ele : jobInfElements) {
+            Element element = ele.getElementsByTag("a").get(0);
+            String url = baseUrl + element.attr("href");
+
+            try {
+                Document detailDoc = HttpConnection.connect(url).get();
+               // System.out.println(detailDoc);
+                jobList.add(jobDetailPageParser.parserJobDetail(detailDoc));
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return jobList;
+    }
+
+    /**
      * 解析job列表页并且持久化到数据库
      *
      * @param page
      * @return
      */
-    public static List<Job> parserJobListAndPresistence(Page page) {
+    public List<Job> parserJobListAndPresistence(Page page) {
         if (page.getStatusCode() != 200) {
             System.out.println("-----访问页面出错" + page.getStatusCode());
             return null;
         }
-
-
         return null;
     }
 
     /**
-     * 解析一条job element
+     * 解析一条列表页的一条job element
      *
      * @param jobElement
      * @return
@@ -86,7 +119,6 @@ public class JobListParser {
         Job job = new Job();
         Company company = new Company();
         Elements elements = jobElement.getElementsByTag("a");
-
         // Element jobHead = jobElement.getElementsByClass("job_head").get(0);
         Element jobHead = elements.get(0);
         job.setIdentity(jobHead.attr("href"));
@@ -110,6 +142,4 @@ public class JobListParser {
         job.setHighSalary(highSalary);
         return job;
     }
-
-
 }

@@ -45,4 +45,14 @@ public class Company {
     public void setCompanyType(String companyType) {
         this.companyType = companyType;
     }
+
+    @Override
+    public String toString() {
+        return "Company{" +
+                "scale='" + scale + '\'' +
+                ", name='" + name + '\'' +
+                ", url='" + url + '\'' +
+                ", companyType='" + companyType + '\'' +
+                '}';
+    }
 }

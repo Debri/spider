@@ -1,4 +1,4 @@
-package studio.geek.Util;
+package studio.geek.util;
 
 import java.io.*;
 import java.net.MalformedURLException;

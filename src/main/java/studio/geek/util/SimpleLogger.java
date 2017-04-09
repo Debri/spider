@@ -1,4 +1,4 @@
-package studio.geek.Util;
+package studio.geek.util;
 
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
@@ -20,7 +20,7 @@ public class SimpleLogger extends Logger {
         Properties p = new Properties();
         String ip = null;
         try {
-            p.load(SimpleLogger.class.getResourceAsStream("/log4j.properties"));
+            p.load(SimpleLogger.class.getResourceAsStream("/log.properties"));
             InetAddress addr = InetAddress.getLocalHost();
             ip = addr.getHostAddress().toString(); //获取本机ip
         } catch (IOException e) {

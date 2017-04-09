@@ -10,8 +10,8 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import studio.geek.Util.RegexUtil;
-import studio.geek.Util.SimpleLogger;
+import studio.geek.util.RegexUtil;
+import studio.geek.util.SimpleLogger;
 import studio.geek.shixiseng.entity.Company;
 import studio.geek.shixiseng.entity.Job;
 import studio.geek.shixiseng.entity.Page;
@@ -30,7 +30,7 @@ public class JobDetailPageParser {
      */
     public static JobDetailPageParser getInstance() {
         if (jobDetailPageParser == null) {
-            synchronized (jobDetailPageParser) {
+            synchronized (JobDetailPageParser.class) {
                 if (jobDetailPageParser == null) {
                     jobDetailPageParser = new JobDetailPageParser();
                 }
@@ -42,11 +42,19 @@ public class JobDetailPageParser {
     private JobDetailPageParser() {
     }
 
-    public static Job parserJobDetail(Page page) throws Exception {
-        Document doc = Jsoup.parse(page.getHtml());
+    /**
+     * 解析职位详情页
+     *
+     * @param doc 详情页的Document
+     * @return
+     * @throws Exception
+     */
+    public Job parserJobDetail(Document doc) throws Exception {
         Job job = new Job();
         Company company = new Company();
+        System.out.println(doc);
         Element jobDetLeft = doc.getElementsByClass("jb_det_left").get(0);//页面左侧职位信息
+
         Element jobDetRightTop = doc.getElementsByClass("jb_det_right_top").get(0);//页面右侧公司信息
         job.setIdentity(jobDetLeft.getElementsByClass("taruuid").attr("value"));
         job.setJobName(jobDetLeft.getElementsByClass("job_name").attr("title"));
@@ -70,32 +78,70 @@ public class JobDetailPageParser {
         company.setCompanyType(getCompanyType(webHref.get(0).toString()));
         company.setScale(getCompanyScale(webHref.get(1).toString()));
         job.setCompany(company);
-
-     /* job.setCompany();
-        job.setCity();
-        job.setAcademic();//学历*/
         return job;
     }
 
+    /**
+     * 解析详情页
+     *
+     * @param page 详情页的包装类
+     * @return
+     * @throws Exception
+     */
+    public Job parserJobDetail(Page page) throws Exception {
+        Document doc = Jsoup.parse(page.getHtml());
+        return parserJobDetail(doc);
+    }
+
+    /**
+     * 解析并且持久化到数据库
+     *
+     * @param page
+     */
     public static void parserJobDetailAndPresistence(Page page) {
 
     }
 
+    /**
+     * 通过类似<a href="/company/detail/com_svm4hjs33cmx">人人网</a>获取公司名
+     *
+     * @param str
+     * @return companyName
+     * @throws Exception
+     */
     public static String getCompanyName(String str) throws Exception {
+        //正则表达式
         String regex = "(\">)[^\\d]+(<)";
         String result = RegexUtil.getStringByRegex(str, regex);
-        return result.substring(2, result.length() - 2);
+        String s = result.substring(2, result.length() - 1);
+        return s;
     }
 
+    /**
+     * 公司类型   互联网
+     *
+     * @param str 带有标签字符串
+     * @return
+     * @throws Exception
+     */
     public static String getCompanyType(String str) throws Exception {
-        String regex = "(\"\"\\s>)[^\\d]+(</span)";
-        String result = RegexUtil.getStringByRegex(str, regex);
-        return result.substring(3, result.length() - 7);
+        String regex = "(\"\">\\s)[^\\t\\r\\n]+(</span)";
+        String result = RegexUtil.getStringByRegex(str, regex);//异常
+        String s = result.substring(3, result.length() - 6);
+        return s;
     }
 
+    /**
+     * 获取公司规模
+     *
+     * @param str
+     * @return
+     * @throws Exception
+     */
     public static String getCompanyScale(String str) throws Exception {
         String regex = "(\"\">\\s)[^\\n]+(</span)";
         String result = RegexUtil.getStringByRegex(str, regex);
-        return result.substring(4, result.length() - 7);
+        String s = result.substring(4, result.length() - 7);
+        return s;
     }
 }

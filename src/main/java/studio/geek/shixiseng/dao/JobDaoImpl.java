@@ -1,6 +1,6 @@
 package studio.geek.shixiseng.dao;
 
-import studio.geek.Util.DBConnectionManager;
+import studio.geek.util.DBConnectionManager;
 import studio.geek.shixiseng.entity.Company;
 import studio.geek.shixiseng.entity.Job;
 

@@ -95,4 +95,20 @@ public class Job {
     public void setCompany(Company company) {
         this.company = company;
     }
+
+    @Override
+    public String toString() {
+        return "Job{" +
+                "identity='" + identity + '\'' +
+                ", searchKeyword='" + searchKeyword + '\'' +
+                ", jobName='" + jobName + '\'' +
+                ", lowSalary=" + lowSalary +
+                ", highSalary=" + highSalary +
+                ", jobType='" + jobType + '\'' +
+                ", city='" + city + '\'' +
+                ", time=" + time +
+                ", company=" + company.toString() +
+                ", academic=" + academic +
+                '}';
+    }
 }

@@ -1,4 +1,4 @@
-package studio.geek.Util;
+package studio.geek.util;
 
 import com.mysql.jdbc.exceptions.MySQLSyntaxErrorException;
 import org.apache.log4j.Logger;

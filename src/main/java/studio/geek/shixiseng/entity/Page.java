@@ -49,11 +49,13 @@ public class Page {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Page)) return false;
+        if (!(o instanceof Page))
+            return false;
 
         Page page = (Page) o;
 
-        if (getStatusCode() != page.getStatusCode()) return false;
+        if (getStatusCode() != page.getStatusCode())
+            return false;
         return getUrl().equals(page.getUrl());
 
     }

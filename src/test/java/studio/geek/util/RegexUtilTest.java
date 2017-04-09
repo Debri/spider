@@ -1,4 +1,4 @@
-package studio.geek.Util;
+package studio.geek.util;
 
 import org.junit.Test;
 
