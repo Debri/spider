@@ -10,6 +10,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import studio.geek.Util.RegexUtil;
 import studio.geek.Util.SimpleLogger;
 import studio.geek.shixiseng.entity.Company;
 import studio.geek.shixiseng.entity.Job;
@@ -17,8 +18,6 @@ import studio.geek.shixiseng.entity.Page;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * 解析职位列表页信息
@@ -47,19 +46,18 @@ public class JobListParser {
      * @param page
      * @return
      */
-    public static List<Job> parserJobList(Page page) {
+    public static List<Job> parserJobList(Page page) throws Exception {
         List<Job> jobList = new ArrayList<Job>();
         if (page.getStatusCode() != 200) {
             System.out.println("-----访问页面出错" + page.getStatusCode());
-
+            return null;
         }
         Document doc = Jsoup.parse(page.getHtml());
         Elements jobs = doc.getElementsByClass("job_inf_inf");
         for (Element jobElement : jobs) {
             jobList.add(doParser(jobElement));
         }
-
-        return null;
+        return jobList;
     }
 
     /**
@@ -69,6 +67,12 @@ public class JobListParser {
      * @return
      */
     public static List<Job> parserJobListAndPresistence(Page page) {
+        if (page.getStatusCode() != 200) {
+            System.out.println("-----访问页面出错" + page.getStatusCode());
+            return null;
+        }
+
+
         return null;
     }
 
@@ -78,7 +82,7 @@ public class JobListParser {
      * @param jobElement
      * @return
      */
-    private static Job doParser(Element jobElement) {
+    private static Job doParser(Element jobElement) throws Exception {
         Job job = new Job();
         Company company = new Company();
         Elements elements = jobElement.getElementsByTag("a");
@@ -95,13 +99,17 @@ public class JobListParser {
         job.setCity(detailElements.get(1).attr("title"));
         int lowSalary = 0;
         int highSalary = 0;
-
-        //job.set
-
-
+        String[] salary = RegexUtil.getStringByRegex(detailElements.get(3).toString(), "[\\d]+(-)[\\d]+").split("-");
+        if (salary.length == 2) {
+            lowSalary = Integer.parseInt(salary[0]);
+            highSalary = Integer.parseInt(salary[1]);
+        } else if (salary.length == 1) {
+            highSalary = Integer.parseInt(salary[0]);
+        }
+        job.setLowSalary(lowSalary);
+        job.setHighSalary(highSalary);
         return job;
     }
-
 
 
 }

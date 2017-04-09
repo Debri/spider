@@ -6,7 +6,7 @@ package studio.geek.shixiseng.entity;
  */
 public class Job {
     private String identity;//唯一标识，也可以作为访问职位的url后缀
-    private String searchKeyword;
+    private String searchKeyword; //搜索关键词
     private String jobName;
     private int lowSalary;//职位工资的范围，例如100-150/天   此处表示100，highSalary表示150
     private int highSalary;//此处表示150
@@ -14,7 +14,15 @@ public class Job {
     private String city;
     private int time;//要求实习时间
     private Company company;
+    Academic academic;
 
+    public Academic getAcademic() {
+        return academic;
+    }
+
+    public void setAcademic(Academic academic) {
+        this.academic = academic;
+    }
 
     public String getIdentity() {
         return identity;
