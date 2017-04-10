@@ -17,7 +17,7 @@ import java.util.List;
  */
 
 /**
- * 多线程
+ * 多线程初代版本
  */
 public class JobTask implements Runnable {
     static List<Job> list = new ArrayList<Job>();

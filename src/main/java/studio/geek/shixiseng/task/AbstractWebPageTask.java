@@ -5,7 +5,6 @@ package studio.geek.shixiseng.task;
  * Date: 2017/4/9.
  */
 
-import org.apache.http.HttpHost;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpRequestBase;
@@ -17,17 +16,16 @@ import studio.geek.shixiseng.entity.Page;
 import studio.geek.util.MyInvocationHandler;
 import studio.geek.util.SimpleLogger;
 
-import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
 
 /**
- * 下载网页并并且执行解析
+ * 下载网页并并且执行解析的抽象类
  */
 public abstract class AbstractWebPageTask implements Runnable {
     private static Logger logger = SimpleLogger.getSimpleLogger(AbstractWebPageTask.class);
     protected String url;
-    protected HttpRequestBase httpRequestBase;
+    protected HttpRequestBase request;
     protected static JobDao jobDao;
     protected static ShixisengHttpClient shixisengHttpClient;
 
@@ -39,8 +37,8 @@ public abstract class AbstractWebPageTask implements Runnable {
         this.url = url;
     }
 
-    public AbstractWebPageTask(HttpRequestBase httpRequestBase) {
-        this.httpRequestBase = httpRequestBase;
+    public AbstractWebPageTask(HttpRequestBase request) {
+        this.request = request;
     }
 
     /*    public void run() {
@@ -74,9 +72,9 @@ public abstract class AbstractWebPageTask implements Runnable {
             if (url != null) {
                 requestStartTime = System.currentTimeMillis();
                 page = shixisengHttpClient.getWebPage(url);
-            } else if (httpRequestBase != null) {
+            } else if (request != null) {
                 requestStartTime = System.currentTimeMillis();
-                page = shixisengHttpClient.getWebPage(httpRequestBase);
+                page = shixisengHttpClient.getWebPage(request);
             }
             long requestEndTime = System.currentTimeMillis();
 
@@ -103,14 +101,12 @@ public abstract class AbstractWebPageTask implements Runnable {
             }
         } catch (InterruptedException e) {
             logger.error("InterruptedException", e);
-        } catch (IOException e) {
-
             if (!shixisengHttpClient.getDetailListPageThreadPool().isShutdown()) {
                 retry();
             }
         } finally {
-            if (httpRequestBase != null) {
-                httpRequestBase.releaseConnection();
+            if (request != null) {
+                request.releaseConnection();
             }
             if (tempRequest != null) {
                 tempRequest.releaseConnection();
@@ -119,8 +115,15 @@ public abstract class AbstractWebPageTask implements Runnable {
         }
     }
 
+    /**
+     * 失败重试具体的由子类实现
+     */
     abstract void retry();
 
+    /**
+     * 处理页面
+     * @param page
+     */
     abstract void handle(Page page);
 
     /**
